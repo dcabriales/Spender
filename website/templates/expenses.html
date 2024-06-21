@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Spender Expenses{% endblock %}
+
+{% block body %}
+<h1>Total Expenses This Cycle: ${{ total_exp }}</h1>
+
+<div class="expense_container">
+    <div class="expense expense-list">
+        <div class="list-group">
+            <nav>
+            <ul class="expense">
+            {% for expense in expensesList %}
+            <li><a href="#" class="list-group-item list-group-item-action d-flex" aria-current="true">
+            <div class="d-flex gap-2 w-100 justify-content-between" >
+            <div>
+            <h6>{{expense.expense}}</h6>
+            <p>{{ expense.cost }}</p>
+            <form method="post" action="{{ url_for('routes.delete_expense', expense_id=expense.eid) }}">
+                <button class="btn btn-danger rounded-pill" type="submit">Delete</button>
+            </form>
+          </div>
+          <small class="text-nowrap">{{expense.date_purchased}}</small>
+        </div>
+        </a>
+        </li>
+        {% endfor %}
+    </ul>
+</nav>
+        </div>
+    </div>
+    <div class="expense expense-form">
+        <form method="POST">
+        <div>
+            <div>
+                <label for="expenseName" class="form-label">Expense Name</label>
+                <input type="text" class="form-control" name="expenseName" id="expenseName" placeholder="Ex. Food">
+            </div>
+              <div class="input-group">
+                <label for="costInput" class="form-label">Cost</label>
+                <div class="input-group">
+                    <span class="input-group-text" id="basic-addon1">$</span>
+                    <input type="text" class="form-control" name="costInput" id="costInput" placeholder="Ex. 25.23" aria-describedby="basic-addon1">
+                </div>
+            </div>
+            <div>
+                <label for="purchaseDate" class="form-label">Date of Purchase</label>
+                <input type="date" class="form-control" onfocus="showPicker" name="purchaseDate" id="purchaseDate">
+            </div>
+            <div class="expense-form-button">
+            <button type="submit" class="expense-form exp-submit form-control">Submit</button>
+            </div>
+        </div>
+        </form>
+    </div>
+    <div class="expense expense-calendar">
+        {% for date,exp in expenses_map.items() %}
+        <div id="exp_total">
+        <h3>{{ date }} : ${{ exp }}</h3>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

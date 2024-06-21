@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Spender Cycles{% endblock %}
+{% block body %}
+
+<div class="cycles_container">
+    <div class="cycles">
+        <h1>Your Spender Cycles: </h1>
+        {% for cycle in all_cycles %}
+        <a href="{{url_for('routes.cycle_info', cycle_id=cycle.cid)}}">{{ cycle.start_date }}-{{ cycle.end_date }}</a>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

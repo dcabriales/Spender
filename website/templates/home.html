@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Spender Home Page{% endblock %}
+{% block css %}
+<link rel="stylesheet" text="text/css" href="{{ url_for('static',filename='styles.css') }}">
+{% endblock %}
+{% block body %}
+<div class="home-grid">
+    <div class="income-grid">
+        <h1> Income stats </h1>
+        <div>
+        <p> Income Amount: ${{ income_map.income_amount }}</p>
+        <p> Income Date: {{ income_map.inc_date }}</p>
+        <p> Max Spend: ${{ income_map.inc_available }}</p>
+        <p> Next Income Date: {{ income_map.nid }}</p>
+    </div>      
+    </div>
+    <div class="chart-grid chart">
+        <canvas id="linechart" role="img" aria-label="Spend Line Chart"></canvas>
+    </div>
+    <div class="expense expense-grid">
+        {% for date,exp in expenses_map.items() %}
+        <div id="exp_total">
+        <p>{{ date }} : ${{ exp }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<script type = "text/javascript">
+    var chart_dates={{chart_map.dates|tojson}};
+    var chart_exp={{chart_map.expenses|tojson}};
+    var chart_og_sp={{chart_map.og_spend|tojson}};
+    var chart_daily_sp={{chart_map.daily_spend|tojson}};
+</script>
+<script src="/static/chart.js"></script>
+{% endblock %}

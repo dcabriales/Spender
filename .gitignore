@@ -1,0 +1,8 @@
+__pycache__/__init__.cpython-312.pyc
+__pycache__/app.cpython-312.pyc
+__pycache__/models.cpython-312.pyc
+__pycache__/routes.cpython-312.pyc
+website/__pycache__/__init__.cpython-312.pyc
+website/__pycache__/models.cpython-312.pyc
+website/__pycache__/routes.cpython-312.pyc
+instance/database.db

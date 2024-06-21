@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" text="text/css" href="{{ url_for('static',filename='/base/base.css') }}">
+  {% block css %}
+  {% endblock %}
+  <title>
+    {% block title %}
+    {% endblock %}
+  </title>
+  <div>
+  <nav class="topnav">
+    <ul>
+      <li>
+      <a href="{{url_for('routes.home')}}">Spender</a>
+      </li>
+      <li>
+        <a href="{{url_for('routes.spend_page')}}">Spend</a>
+      </li>
+      <li>
+        <a href="{{url_for('routes.income_info')}}">Income</a>
+      </li>
+      <li>
+        <a href="{{url_for('routes.expenses_page')}}">Expenses</a>
+      </li>
+      <li>
+        <a href="{{url_for('routes.cycles_page')}}">Cycles</a>
+      </li>
+    </ul>
+  </nav>
+</div>
+</head>
+<body>
+  {% block body %}
+
+  {% endblock %}
+</body>
+</html>

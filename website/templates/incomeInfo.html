@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}Spender Expenses{% endblock %}
+{% block body %}
+<h1> Your Income Details: </h1>
+<h2> Latest Income Amount: ${{ data.income_amount }}</h2>
+<h2> Latest Income Date: {{ data.inc_date }}</h2>
+<h2> Income Available: {{ data.inc_available }}</h2>
+<h2> Upcoming Income Date: {{ data.nid }}</h2>
+{% endblock %}
