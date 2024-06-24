@@ -14,3 +14,7 @@ Future
 - Implement a tag system for each expense
 - Log in system
 - Add Income during a cycle
+
+To deploy web service
+run:
+python app.py

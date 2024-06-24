@@ -66,7 +66,6 @@ def map_exp_date(user):
 
 @routes.route("/", methods=["GET"])
 def home():
-    user_data =  gather_user_data("Cabriales")
     if user_data["account"].NextIncomeDate <= datetime.date.today():
         return redirect(url_for("routes.updateIncomePage"))
     all_dates = date_range_list(user_data["income"].date, user_data["account"].NextIncomeDate)
@@ -131,7 +130,6 @@ def home():
 
 @routes.route("/expenses", methods=["GET", "POST"])
 def expenses_page():
-    user_data = gather_user_data("Cabriales")
     if request.method == "POST":
         data = request.form
         expense = data["expenseName"]
@@ -147,7 +145,6 @@ def expenses_page():
 
 @routes.route("/fillexpenses", methods=["GET", "POST"])
 def fillexpenses():
-    user_data = gather_user_data("Cabriales")
     if request.method == "POST":
         data = request.form
         expense = data["expenseName"]
@@ -163,9 +160,8 @@ def fillexpenses():
 
 @routes.route("/NextIncomeDate", methods =["GET","POST"])
 def nextIncomeDate():
-    user_data  = gather_user_data("Cabriales")
     if request.method == "POST":
-        user_acc = User.query.filter_by(name="Cabriales").first()
+        user_acc = User.query.filter_by(name=user_data["account"].name).first()
         data = request.form
         pDate = data["purchaseDate"]
         date_object = datetime.datetime.strptime(pDate, '%Y-%m-%d').date()
@@ -177,7 +173,6 @@ def nextIncomeDate():
    
 @routes.route("/UpdateIncome", methods =["GET","POST"])
 def updateIncomePage():
-    user_data =  gather_user_data("Cabriales")
     if request.method == "POST":
         data = request.form
         amount = float(data["incomeAmount"])
@@ -190,7 +185,6 @@ def updateIncomePage():
    
 @routes.route("/incomePage", methods = ["GET"])
 def income_info():
-    user_data =  gather_user_data("Cabriales")
     nextIncDate = user_data["account"].NextIncomeDate
     total_expense = calculateExpenses(user_data["expenses"])
     incomeAvailable = calculateIncome(user_data["income"].amount, total_expense)
@@ -226,7 +220,6 @@ def month_day_fromDate(date_list):
 
 @routes.route("/spend", methods=["GET"])
 def spend_page():
-    user_data =  gather_user_data("Cabriales")
     all_dates = date_range_list(user_data["income"].date, user_data["account"].NextIncomeDate)
     ogdaysLeft = calculateDaysLeft(user_data["income"].date, user_data["account"].NextIncomeDate)
     original_spend = spendAmount(user_data["income"].amount, ogdaysLeft)
@@ -276,16 +269,13 @@ def spend_page():
 
 @routes.route("/cycles", methods = ["GET"])
 def cycles_page():
-    user_data =  gather_user_data("Cabriales")
     all_cycles = Cycle.query.filter(Cycle.user==user_data["account"].id).filter(Cycle.start_date != user_data["income"].date).order_by(desc(Cycle.start_date)).all()
     return render_template("cycles.html", all_cycles=all_cycles)
 
 @routes.route("/cycle/<cycle_id>", methods=["GET"])
 def cycle_info(cycle_id):
-    user_data =  gather_user_data("Cabriales")
     cycle = Cycle.query.filter(Cycle.cid==cycle_id).filter(Cycle.user == user_data["account"].id).first()
     cycle_income = Income.query.filter(Income.date == cycle.start_date).filter(Income.user == user_data["account"].id).first()    
-    user_data =  gather_user_data("Cabriales")
     all_dates = date_range_list(cycle.start_date, cycle.end_date)
     chart_label_days = month_day_fromDate(all_dates)
 
