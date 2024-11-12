@@ -17,6 +17,7 @@ spec:
         image: dcabriales/spender-flask:kuber-test
         ports:
         - containerPort: 5000
+        imagePullPolicy: Always
 ---
 apiVersion: v1
 kind: Service
