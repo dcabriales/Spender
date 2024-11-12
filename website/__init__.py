@@ -28,7 +28,7 @@ def create_app():
         # # db.session.delete(create_user)
         # new_inc = Income(300, datetime.date(2024, 11, 1),1)
         # db.session.add(new_inc)
-        # db.session.commit()
+        db.session.commit()
         db.create_all()
 
     return app
