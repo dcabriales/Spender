@@ -16,3 +16,5 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build the Docker image
       run: docker build -t dcabriales/spender-flask:${{ github.ref_name }} .
+    - name: Publish Docker image
+      run: docker push dcabriales/spender-flask:${{ github.ref_name }}
