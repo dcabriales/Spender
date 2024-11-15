@@ -14,9 +14,11 @@ def create_app():
 
     from .routes import routes
     from .auth import auth as auth_blueprint
+    from .main import main as main_blueprint
 
     app.register_blueprint(routes, url_prefix='/')
     app.register_blueprint(auth_blueprint)
+    app.register_blueprint(main_blueprint)
 
     from .models import User, Expenses, Income, Cycle
    
