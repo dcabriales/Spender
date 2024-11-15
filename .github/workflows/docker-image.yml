@@ -15,9 +15,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker build -t dcabriales/spender-flask:${{ github.ref_name }} .
+      run: docker build -t dcabriales/spender-flask-${{ github.ref_name }} .
     - name: Publish Docker image
       run: |
         docker login -u dcabriales -p ${{ secrets.DOCKER_HUB_TOKEN }}
-        docker push dcabriales/spender-flask:${{ github.ref_name }}
+        docker push dcabriales/spender-flask-${{ github.ref_name }}
         
