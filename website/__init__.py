@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 from os import path
 import datetime
 
@@ -11,6 +12,9 @@ def create_app():
     app.config['SECRET_KEY'] = 'ASDFJKL ASDFJKL'
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
     db.init_app(app)
+    login_manager = LoginManager()
+    login_manager.login_view = 'auth.login'
+    login_manager.init_app(app)
 
     from .routes import routes
     from .auth import auth as auth_blueprint
@@ -21,7 +25,10 @@ def create_app():
     app.register_blueprint(main_blueprint)
 
     from .models import User, Expenses, Income, Cycle
-   
+    @login_manager.user_loader
+    def load_user(user_id):
+        # since the user_id is just the primary key of our user table, use it in the query for the user
+        return User.query.get(int(user_id))
     with app.app_context():
         # oldd = Cycle(start_date=datetime.date(2024,5,31),end_date=datetime.date(2024,6,13),user=1)
         # new = Cycle(start_date=datetime.date(2024,6,14),end_date=datetime.date(2024,6,27),user=1)
