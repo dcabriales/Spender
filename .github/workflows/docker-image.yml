@@ -2,9 +2,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main", "kuber-test" ]
+    branches: [ "main", "feature/**" ]
   pull_request:
-    branches: [ "main", "kuber-test" ]
+    branches: [ "main", "feature/**" ]
 
 jobs:
 
