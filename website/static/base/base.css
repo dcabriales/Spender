@@ -1,36 +1,59 @@
 :root {
     --light: #ececec;
     --green: #9fd3c7;
-    --lightblue: #385170;
+    --lightgreen:  #afe7da;
+    --lightblue: #77a3da;
     --darkblue: #142d4c;
+    --purple:  #5e008a;
+    --black: #000000;
 }
 *{
     margin:0;
     box-sizing: border-box;
     }
+    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap');
 body {
-    background-color: var(--darkblue);
+    background: linear-gradient(-45deg, var(--light), var(--green), var(--darkblue), var(--green));
+    background-size: 600% 1100%;
+    animation: backgroundFade 15s ease infinite;
+    margin: 0;
+    box-sizing: border-box;
+    /* background-color: var(--light); */
+}
+@keyframes backgroundFade {
+    0% {
+        background-postition: 0% 50%;
+    }
+    50% {
+        background-postition: 100% 50%;
+    }
+    100% {
+        background-postition: 0% 50%;
+    }
 }
 
 h1 {
-    color: var(--darkblue);
+    color: var(--black);
     font-family: Georgia, 'Times New Roman', Times, serif;
+    /* font-family: Gerogia, 'Dancing Script' , cursive; */
     font-size: medium;
-
+    text-align: center;
 }
 h2 {
     font-family: Georgia, 'Times New Roman', Times, serif;
     color: var(--darkblue);
     font-size: medium;
+
 }
 li a{
     display: block;
-    color: var(--light);
+    color: var(--black);
     text-align: center;
     padding: 20px 16px;
     text-decoration: none;
     font-family: Georgia, 'Times New Roman', Times, serif;
     font-size:large;
+    border-right: 1px solid black;
 }
 li {
     float: left;
@@ -40,7 +63,11 @@ li a:hover {
 }
 .topnav {
     display: block;
-    background-color: var(--lightblue);
+    background-color: var(--green);
+    border-top: 2px solid black;
+    border-bottom: 2px solid black;
+    border-left: 2px solid black;
+    border-right: 2px solid black;
     align-items: center;
     justify-content: center;
 }

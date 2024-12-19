@@ -317,3 +317,7 @@ def cycle_info(cycle_id):
         "daily_spend": dailySpend
     }
     return render_template("cycle_info.html", chart_map=chart_map)
+
+@routes.route("/Signup", methods = ["GET"])
+def sign():
+    return render_template("signin.html")
