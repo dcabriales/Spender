@@ -13,13 +13,14 @@ class User(db.Model):
     NextIncomeDate = db.Column(db.Date)
 
 
-    def __init__(self, name, NextIncomeDate):
+    def __init__(self, email, name, password):
         self.name = name
-        self.NextIncomeDate = NextIncomeDate
+        self.password = password
+        self.email = email
 
 
     def __repr__(self):
-        return f"User(id={self.id}, name={self.name}, NextIncomeDate={self.NextIncomeDate})"
+        return f"User(id={self.id}, name={self.name}, email={self.email})"
 
 
 class Expenses(db.Model):
