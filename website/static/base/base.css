@@ -1,15 +1,17 @@
 :root {
     --light: #ececec;
-    --green: #9fd3c7;
     --lightblue: #385170;
     --darkblue: #142d4c;
+    --red: #ff0000;
+    --lightred: #ff5f5f;
+    --baige: #fffccd;
 }
 *{
     margin:0;
     box-sizing: border-box;
     }
 body {
-    background-color: var(--darkblue);
+    background-color: var(--baige);
 }
 
 h1 {
@@ -36,11 +38,11 @@ li {
     float: left;
 }
 li a:hover {
-    background-color: var(--darkblue);
+    background-color: var(--lightred);
 }
 .topnav {
     display: block;
-    background-color: var(--lightblue);
+    background-color: var(--red);
     align-items: center;
     justify-content: center;
 }
