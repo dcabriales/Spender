@@ -11,7 +11,7 @@
     box-sizing: border-box;
     }
 body {
-    background-color: var(--baige);
+    background-color: var(--lightblue);
 }
 
 h1 {
@@ -38,11 +38,11 @@ li {
     float: left;
 }
 li a:hover {
-    background-color: var(--lightred);
+    background-color: var(--darkblue);
 }
 .topnav {
     display: block;
-    background-color: var(--red);
+    background-color: var(--darkblue);
     align-items: center;
     justify-content: center;
 }
