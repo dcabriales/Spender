@@ -2,10 +2,14 @@
 
 {% block title %}Spender Expenses{% endblock %}
 
-{% block body %}
-<h1>Total Expenses This Cycle: ${{ total_exp }}</h1>
+{% block css %}
+<link rel="stylesheet" text="text/css" href="{{ url_for('static',filename='styles.css') }}">
+{% endblock %}
 
-<div class="expense_container">
+{% block body %}
+<!-- <h1>Total Expenses This Cycle: ${{ total_exp }}</h1> -->
+
+<!-- <div class="expense_container">
     <div class="expense expense-list">
         <div class="list-group">
             <nav>
@@ -60,5 +64,44 @@
         </div>
         {% endfor %}
     </div>
+</div> -->
+<div class="form">
+    <div class="title">
+        <h2>Expenses</h2>
+        <span>Log your expenses here</span>
+    </div>
+    <form method="POST">
+        <div>
+            <label for="expenseName" class="form-label">Expense Name</label>
+            <input
+                type="text"
+                id="expenseName"
+                name="expenseName"
+                class="input"
+                placeholder="Ex. Food"
+            />
+        </div>
+        <div>
+            <label for="expenseCost" class="form-label">Cost</label>
+            <input
+                type="text"
+                id="expenseCost"
+                name="expenseCost"
+                class="input"
+                placeholder="Ex. 25.23"
+            />
+        </div>
+        <div>
+            <label for="datePurchased" class="form-label">Date of Purchase</label>
+            <input
+                type="text"
+                id="datePurchased"
+                name="datePurchased"
+                class="input"
+                placeholder="mm/dd/yyyy"
+            />
+        </div>
+        <button type="submit" class="button-confirm">Submit</button>
+    </form>
 </div>
 {% endblock %}
