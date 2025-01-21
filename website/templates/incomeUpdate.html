@@ -1,22 +1,16 @@
 {% extends 'base.html' %}
 {% block title %}Spender Home Page{% endblock %}
-{% block body %}<h1>Income</h1>
-<form method="POST">
-<h3 align="center">Update with the amount received from your income on {{ income_date }}</h3>
-<div class="mx-auto p-2" style="width: 300px;">
-    <div class="input-group mb-3">
-        <label for="incomeAmount" class="form-label">Income Amount</label>
-        <div class="input-group">
-            <span class="input-group-text" id="basic-addon1">$</span>
-            <input type="text" class="form-control" name="incomeAmount" id="incomeAmount" placeholder="Ex. 25.23" aria-describedby="basic-addon1">
-        </div>    
+{% block css %}
+<link rel="stylesheet" text="text/css" href="{{ url_for('static',filename='styles.css') }}">
+{% endblock %}
+{% block body %}
+<form class="form">
+    <div class="title">Welcome,<br><span>Please input income</span></div>
+    <div class="input-container">
+    <span class="input-group-text" id="basic-addon1">$</span>
+    <input class="input" name="example" placeholder="Example 23.22">
     </div>
-
-
-    <br>
-    <div class="row justify-content-center">
-    <button type="submit" class="btn btn-secondary btn-lg">Submit</button>
-</div>
-</div>
-</form>
+    </div>
+    <button class="button-confirm">Submit</button>
+  </form>
 {% endblock %}
