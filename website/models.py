@@ -1,24 +1,27 @@
 from . import db
 from flask_login import UserMixin
 import datetime
+from flask_login import UserMixin
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     # __tablename__ = "user_account"
     id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(100), unique=True)
     name = db.Column(db.String(30))
+    password = db.Column(db.String(100))
     NextIncomeDate = db.Column(db.Date)
 
 
-    def __init__(self, name, NextIncomeDate):
+    def __init__(self, email, name, password):
         self.name = name
-        self.NextIncomeDate = NextIncomeDate
+        self.password = password
+        self.email = email
 
 
     def __repr__(self):
-        return f"User(id={self.id}, name={self.name}, NextIncomeDate={self.NextIncomeDate})"
-
-
+        return f"User(id={self.id}, name={self.name}, email={self.email})"
+    
 class Expenses(db.Model):
     # __tablename__ = "user_expenses"
     eid = db.Column(db.Integer, primary_key=True)

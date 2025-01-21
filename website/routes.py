@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask_login import login_user, login_required, logout_user
 import datetime
 from datetime import timedelta
 from .models import User, Expenses, Income, Cycle
@@ -40,7 +41,7 @@ def addExpense(name, user_id, cost, date):
     db.session.commit()
 
 def gather_user_data(username):
-    user_acc = User.query.filter_by(name=username).first()
+    user_acc = User.query.filter_by(email=username).first()
     userInc = Income.query.filter(Income.user==user_acc.id).order_by(Income.date.desc()).first()
     userExpenses = Expenses.query.filter(Expenses.user==user_acc.id).filter(Expenses.date_purchased >= userInc.date).all()
     return {"account": user_acc, "income":userInc,"expenses":userExpenses}
@@ -65,8 +66,15 @@ def map_exp_date(user):
     return mapped_expenses 
 
 @routes.route("/", methods=["GET"])
+@login_required
 def home():
-    user_data =  gather_user_data("Cabriales")
+    if "email" in session:
+        user = User.query.filter_by(email=session["email"]).first()
+        if Income.query.filter_by(user=user.id).first() == None:
+            return redirect(url_for("routes.NewUserIncome"))
+        if user.NextIncomeDate == None:
+            return redirect(url_for("routes.nextIncomeDate"))
+        user_data =  gather_user_data(session["email"])
     if user_data["account"].NextIncomeDate <= datetime.date.today():
         return redirect(url_for("routes.updateIncomePage"))
     all_dates = date_range_list(user_data["income"].date, user_data["account"].NextIncomeDate)
@@ -130,8 +138,10 @@ def home():
 
 
 @routes.route("/expenses", methods=["GET", "POST"])
+@login_required
 def expenses_page():
-    user_data =  gather_user_data("Cabriales")
+    if "email" in session:
+        user_data = gather_user_data(session["email"])
     if request.method == "POST":
         data = request.form
         expense = data["expenseName"]
@@ -146,9 +156,11 @@ def expenses_page():
         return render_template("expenses.html", expensesList = user_data["expenses"], total_exp=total_expense, expenses_map=map_exp)
 
 @routes.route("/fillexpenses", methods=["GET", "POST"])
+@login_required
 def fillexpenses():
+    if "email" in session:
+        user_data =  gather_user_data(session["email"])
     if request.method == "POST":
-        user_data =  gather_user_data("Cabriales")
         data = request.form
         expense = data["expenseName"]
         cost = data["costInput"]
@@ -162,22 +174,28 @@ def fillexpenses():
 
 
 @routes.route("/NextIncomeDate", methods =["GET","POST"])
+@login_required
 def nextIncomeDate():
+    NID=None
+    if "email" in session:
+        user_data = User.query.filter_by(email=session["email"]).first()
     if request.method == "POST":
-        user_data =  gather_user_data("Cabriales")
-        user_acc = User.query.filter_by(name=user_data["account"].name).first()
         data = request.form
-        pDate = data["purchaseDate"]
-        date_object = datetime.datetime.strptime(pDate, '%Y-%m-%d').date()
-        user_acc.NextIncomeDate = date_object
+        # pDate = data["purchaseDate"]
+        date_object = datetime.datetime.strptime(data["NextIncomeDateInput"], '%Y-%m-%d').date()
+        user_data.NextIncomeDate = date_object
         db.session.commit()
-        return redirect(url_for("routes.fillexpenses"))
+        return redirect(url_for("routes.home"))
     elif request.method == "GET":
-        return render_template("NextIncomeUpdate.html", NID=user_data["account"].NextIncomeDate)
+        return render_template("NextIncomeUpdate.html", NID=NID)
    
 @routes.route("/UpdateIncome", methods =["GET","POST"])
+@login_required
 def updateIncomePage():
-    user_data =  gather_user_data("Cabriales")
+    if "email" in session:
+        user = session["email"]
+        print(user)
+        user_data = gather_user_data(user)
     if request.method == "POST":
         data = request.form
         amount = float(data["incomeAmount"])
@@ -188,9 +206,28 @@ def updateIncomePage():
     elif request.method == "GET":
         return render_template("incomeUpdate.html", income_date=user_data["account"].NextIncomeDate)
    
+@routes.route("/NewUserIncome", methods = ["GET","POST"])
+def NewUserIncome():
+    if "email" in session:
+        userEmail = session["email"]
+        user = User.query.filter_by(email=userEmail).first()
+    if request.method == "POST":
+        data = request.form
+        amount = float(data["incomeAmount"])
+        date = datetime.datetime.strptime(data["incomeDate"], '%Y-%m-%d').date()
+        newIncome = Income(amount=amount,date=date, user=user.id)
+        db.session.add(newIncome)
+        db.session.commit()
+        return redirect(url_for("routes.home"))
+    elif request.method == "GET":
+        return render_template("newUserIncome.html")
+    
+
 @routes.route("/incomePage", methods = ["GET"])
+@login_required
 def income_info():
-    user_data =  gather_user_data("Cabriales")
+    if "email" in session:
+        user_data =  gather_user_data(session["email"])
     nextIncDate = user_data["account"].NextIncomeDate
     total_expense = calculateExpenses(user_data["expenses"])
     incomeAvailable = calculateIncome(user_data["income"].amount, total_expense)
@@ -203,6 +240,7 @@ def income_info():
     return render_template("incomeInfo.html", data=income_info_data)
 
 @routes.route("/deleteExpense/<expense_id>",methods=["POST"])
+@login_required
 def delete_expense(expense_id):
     expense = Expenses.query.filter_by(eid=expense_id).first()
     db.session.delete(expense)
@@ -225,8 +263,10 @@ def month_day_fromDate(date_list):
     return dataset
 
 @routes.route("/spend", methods=["GET"])
+@login_required
 def spend_page():
-    user_data =  gather_user_data("Cabriales")
+    if "email" in session:
+        user_data =  gather_user_data(session["email"])
     all_dates = date_range_list(user_data["income"].date, user_data["account"].NextIncomeDate)
     ogdaysLeft = calculateDaysLeft(user_data["income"].date, user_data["account"].NextIncomeDate)
     original_spend = spendAmount(user_data["income"].amount, ogdaysLeft)
@@ -275,14 +315,18 @@ def spend_page():
     return render_template("spender.html",chart_map=chart_map, net_spend=net_spend)
 
 @routes.route("/cycles", methods = ["GET"])
+@login_required
 def cycles_page():
-    user_data =  gather_user_data("Cabriales")
+    if "email" in session:
+        user_data =  gather_user_data(session["email"])
     all_cycles = Cycle.query.filter(Cycle.user==user_data["account"].id).filter(Cycle.start_date != user_data["income"].date).order_by(desc(Cycle.start_date)).all()
     return render_template("cycles.html", all_cycles=all_cycles)
 
 @routes.route("/cycle/<cycle_id>", methods=["GET"])
+@login_required
 def cycle_info(cycle_id):
-    user_data =  gather_user_data("Cabriales")
+    if "email" in session:
+        user_data =  gather_user_data(session["email"])
     cycle = Cycle.query.filter(Cycle.cid==cycle_id).filter(Cycle.user == user_data["account"].id).first()
     cycle_income = Income.query.filter(Income.date == cycle.start_date).filter(Income.user == user_data["account"].id).first()    
     all_dates = date_range_list(cycle.start_date, cycle.end_date)

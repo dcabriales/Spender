@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block css %}
+<link rel="stylesheet" text="text/css" href="{{ url_for('static',filename='styles.css') }}">
+{% endblock %}
+{% block title %}Spender Home Page{% endblock %}
+{% block body %}<h1>Income</h1>
+<form method="POST">
+<h3 align="center">Update with your most recent income</h3>
+<div>
+    <div class="input-group">
+        <label for="incomeAmount" class="form-label">Income Amount</label>
+        <div class="input-group">
+            <span class="input-group-text" id="basic-addon1">$</span>
+            <input type="text" class="form-control" name="incomeAmount" id="incomeAmount" placeholder="Ex. 25.23" aria-describedby="basic-addon1">
+        </div>
+        
+    </div>
+    <div>
+        <label for="incomeDate" class="form-label">Date of Income</label>
+        <input type="date" class="form-control" onfocus="showPicker" name="incomeDate" id="incomeDate">
+    </div>    
+
+    <br>
+    <div class="row justify-content-center">
+    <button type="submit" class="btn btn-secondary btn-lg">Submit</button>
+</div>
+</div>
+</form>
+{% endblock %}
