@@ -174,7 +174,7 @@ def fillexpenses():
 
 
 @routes.route("/NextIncomeDate", methods =["GET","POST"])
-# @login_required
+@login_required
 def nextIncomeDate():
     NID=None
     if "email" in session:
