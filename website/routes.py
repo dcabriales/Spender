@@ -145,8 +145,8 @@ def expenses_page():
     if request.method == "POST":
         data = request.form
         expense = data["expenseName"]
-        cost = data["costInput"]
-        pDate = data["purchaseDate"]
+        cost = data["expenseCost"]
+        pDate = data["datePurchased"]
         date_object = datetime.datetime.strptime(pDate, '%Y-%m-%d').date()
         addExpense(expense, user_data["account"].id, float(cost), date_object)
         return redirect("expenses")
@@ -163,8 +163,8 @@ def fillexpenses():
     if request.method == "POST":
         data = request.form
         expense = data["expenseName"]
-        cost = data["costInput"]
-        pDate = data["purchaseDate"]
+        cost = data["expenseCost"]
+        pDate = data["datePurchased"]
         date_object = datetime.datetime.strptime(pDate, '%Y-%m-%d').date()
         addExpense(expense, user_data["account"].id, float(cost), date_object)
         return redirect(url_for("routes.fillexpenses"))
@@ -177,11 +177,12 @@ def fillexpenses():
 @login_required
 def nextIncomeDate():
     NID=None
+    print("In next income date page")
     if "email" in session:
         user_data = User.query.filter_by(email=session["email"]).first()
     if request.method == "POST":
         data = request.form
-        # pDate = data["purchaseDate"]
+        # pDate = data["datePurchased"]
         date_object = datetime.datetime.strptime(data["NextIncomeDateInput"], '%Y-%m-%d').date()
         user_data.NextIncomeDate = date_object
         db.session.commit()
@@ -197,6 +198,7 @@ def updateIncomePage():
         print(user)
         user_data = gather_user_data(user)
     if request.method == "POST":
+        print("form submitted")
         data = request.form
         amount = float(data["incomeAmount"])
         newIncome = Income(amount=amount,date=user_data["account"].NextIncomeDate, user=user_data["account"].id)

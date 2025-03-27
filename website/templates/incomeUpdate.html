@@ -4,11 +4,11 @@
 <link rel="stylesheet" text="text/css" href="{{ url_for('static',filename='styles.css') }}">
 {% endblock %}
 {% block body %}
-<form class="form">
+<form class="form" method="POST">
     <div class="title">Welcome,<br><span>Please input income</span></div>
     <div class="input-container">
     <span class="input-group-text" id="basic-addon1">$</span>
-    <input class="input" name="example" placeholder="Example 23.22">
+    <input class="input" name="incomeAmount" id="incomeAmount" placeholder="Example 23.22">
     </div>
     </div>
     <button class="button-confirm">Submit</button>
