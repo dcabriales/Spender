@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from os import path
 import datetime
+from flask_migrate import Migrate
 
 db = SQLAlchemy()
 DB_NAME = "database.db"
@@ -10,8 +11,9 @@ DB_NAME = "database.db"
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'ASDFJKL ASDFJKL'
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://postgres:mypassword@localhost:5432/spender-flaskDB'
     db.init_app(app)
+    migrate = Migrate(app, db)
     login_manager = LoginManager()
     login_manager.login_view = 'auth.login'
     login_manager.init_app(app)
