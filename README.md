@@ -17,4 +17,6 @@ Future
 
 To deploy web service
 run:
-python app.py
+py app.py
+
+work on refactoring user class functions
