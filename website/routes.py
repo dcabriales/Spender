@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
 from flask_login import login_user, login_required, logout_user
 import datetime
-from datetime import timedelta
 from .models import User, Expenses, Income, Cycle
 from .classes import UserData, Chart, calc_days_remaining, calc_spendability, netIncome, date_range_list, month_day_fromDate
 from .calc_helpers import (
@@ -61,6 +60,22 @@ def home():
         "income_amount": user.income.amount,
         "inc_date": user.income.date
     }
+    today_income = netIncome(user.income.amount, today_expenses)
+    today_spend = round(calc_spendability(today_income, daysLeft),2)
+    exp_before_today = Expenses.query.filter(Expenses.user==user.account.id).filter(Expenses.date_purchased >= user.income.date).filter(Expenses.date_purchased < currentDay).all()
+    today_expenses = totalExpenses(exp_before_today)
+    daysLeft = calc_days_remaining(currentDay, user.account.NextIncomeDate)
+
+    exp_today = Expenses.query.filter(Expenses.user==user.account.id).filter(Expenses.date_purchased == currentDay).all()
+    spent_today = totalExpenses(exp_today)
+    net_spend = round(today_spend - spent_today,2)
+    if net_spend > 0:
+        net_spend = str(f"+${net_spend}")
+    elif net_spend < 0:
+        net_spend = str(f"${net_spend}")
+    else:
+        net_spend = str("$"+net_spend)
+    
     return render_template("home.html", chart_map=user_Chart.chart_map, expenses_map=map_exp, income_map=income_info_data)
 
 
@@ -107,12 +122,17 @@ def nextIncomeDate():
     print("In next income date page")
     if "email" in session:
         user = User.query.filter(User.email == session["email"]).first()
+        prev_nid = datetime.datetime.strptime(data["NextIncomeDateInput"], '%Y-%m-%d').date()
+
     if request.method == "POST":
         data = request.form
         # pDate = data["datePurchased"]
         date_object = datetime.datetime.strptime(data["NextIncomeDateInput"], '%Y-%m-%d').date()
         user.NextIncomeDate = date_object
         db.session.add(user)
+        db.session.commit()
+        new_Cycle = Cycle(user=user.id, start_date=prev_nid, end_date=date_object)
+        db.session.add(new_Cycle)
         db.session.commit()
         return redirect(url_for("routes.home"))
     elif request.method == "GET":
@@ -149,23 +169,6 @@ def NewUserIncome():
         return redirect(url_for("routes.home"))
     elif request.method == "GET":
         return render_template("newUserIncome.html")
-    
-
-@routes.route("/incomePage", methods = ["GET"])
-@login_required
-def income_info():
-    if "email" in session:
-        user = UserData(session["email"])
-    nextIncDate = user.account.NextIncomeDate
-    total_expense = totalExpenses(user.expenses)
-    incomeAvailable = netIncome(user.income.amount, total_expense)
-    income_info_data = {
-        "inc_available":round(incomeAvailable,2),
-        "nid":nextIncDate,
-        "income_amount": user.income.amount,
-        "inc_date": user.income.date
-    }
-    return render_template("incomeInfo.html", data=income_info_data)
 
 @routes.route("/deleteExpense/<expense_id>",methods=["POST"])
 @login_required
@@ -174,32 +177,6 @@ def delete_expense(expense_id):
     db.session.delete(expense)
     db.session.commit()
     return redirect(url_for("routes.expenses_page"))
-
-@routes.route("/spend", methods=["GET"])
-@login_required
-def spend_page():
-    if "email" in session:
-        user = UserData(session["email"])
-        user_Chart = Chart(user.income, user.expenses, user.account)
-
-    daysLeft = calc_days_remaining(currentDay, user.account.NextIncomeDate)
-    exp_before_today = Expenses.query.filter(Expenses.user==user.account.id).filter(Expenses.date_purchased >= user.income.date).filter(Expenses.date_purchased < currentDay).all()
-    today_expenses = totalExpenses(exp_before_today)
-    today_income = netIncome(user.income.amount, today_expenses)
-    today_spend = round(calc_spendability(today_income, daysLeft),2)
-
-    exp_today = Expenses.query.filter(Expenses.user==user.account.id).filter(Expenses.date_purchased == currentDay).all()
-    spent_today = totalExpenses(exp_today)
-    net_spend = round(today_spend - spent_today,2)
-    if net_spend > 0:
-        net_spend = str(f"+${net_spend}")
-    elif net_spend < 0:
-        net_spend = str(f"${net_spend}")
-    else:
-        net_spend = str("$"+net_spend)
-    """ chart data """
-
-    return render_template("spender.html",chart_map=user_Chart.chart_map, net_spend=net_spend)
 
 @routes.route("/cycles", methods = ["GET"])
 @login_required
