@@ -75,8 +75,9 @@ def home():
         net_spend = str(f"${net_spend}")
     else:
         net_spend = str("$"+net_spend)
-    
-    return render_template("home.html", chart_map=user_Chart.chart_map, expenses_map=map_exp, income_map=income_info_data)
+    all_cycles = Cycle.query.filter(Cycle.user == user.account.id).filter(Cycle.start_date != user.income.date).order_by(desc(Cycle.start_date)).all()
+
+    return render_template("home.html", chart_map=user_Chart.chart_map, expenses_map=map_exp, income_map=income_info_data, cycles=all_cycles)
 
 
 @routes.route("/expenses", methods=["GET", "POST"])
@@ -177,14 +178,6 @@ def delete_expense(expense_id):
     db.session.delete(expense)
     db.session.commit()
     return redirect(url_for("routes.expenses_page"))
-
-@routes.route("/cycles", methods = ["GET"])
-@login_required
-def cycles_page():
-    if "email" in session:
-        user = UserData(session["email"])
-    all_cycles = Cycle.query.filter(Cycle.user==user.account.id).filter(Cycle.start_date != user.income.date).order_by(desc(Cycle.start_date)).all()
-    return render_template("cycles.html", all_cycles=all_cycles)
 
 @routes.route("/cycle/<cycle_id>", methods=["GET"])
 @login_required

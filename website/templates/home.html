@@ -24,6 +24,22 @@
         </div>
         {% endfor %}
     </div>
+    <div class="cycle-grid">
+        <h1> Cycles </h1>
+        {% if cycles %}
+            <ul>
+                {% for cycle in cycles %}
+                    <li>
+                        <a href="{{ url_for('routes.cycle_info', cycle_id=cycle.cid) }}">
+                            Cycle {{ cycle.cid }}: {{ cycle.start_date }} to {{ cycle.end_date }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No cycles found.</p>
+        {% endif %}
+    </div>
 </div>
 <script type = "text/javascript">
     var chart_dates={{chart_map.dates|tojson}};
