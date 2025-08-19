@@ -11,16 +11,28 @@ currentDay = datetime.date.today()
 
 routes = Blueprint("routes", __name__)
 
+class UserData:
+    def __init__(self, email):
+        self.email = email
+        self.account = User.query.filter(User.email == email).first()
+        self.income = Income.query.filter(Income.user == self.account.id).order_by(Income.date.desc()).first()
+        self.expenses = Expenses.query.filter(Expenses.user == self.account.id).filter(Expenses.date_purchased >= self.income.date).all()
+
+    def total_Expenses(self):
+        return sum(exp.cost for exp in self.expenses)
+    
+    def net_Income(self):
+        return self.income.amount - self.total_Expenses()
 
 def spendAmount(incomeAvailable, daysLeft):
     return incomeAvailable / daysLeft
 
 
-def calculateIncome(income, expenses):
+def netIncome(income, expenses):
     return income - expenses
 
 
-def calculateExpenses(expenses):
+def totalExpenses(expenses):
     total = 0
     for expense in expenses:
         total += expense.cost
@@ -40,16 +52,9 @@ def addExpense(name, user_id, cost, date):
     db.session.add(new_expense)
     db.session.commit()
 
-def gather_user_data(username):
-    user_acc = User.query.filter_by(email=username).first()
-    userInc = Income.query.filter(Income.user==user_acc.id).order_by(Income.date.desc()).first()
-    userExpenses = Expenses.query.filter(Expenses.user==user_acc.id).filter(Expenses.date_purchased >= userInc.date).all()
-    return {"account": user_acc, "income":userInc,"expenses":userExpenses}
-
 def map_exp_date(user):
     mapped_expenses =  {}
-    user["expenses"]
-    first_day = user["income"].date
+    first_day = user.income.date
     days = calculateDaysLeft(first_day, currentDay)
     userExpenses = Expenses.query.filter(Expenses.date_purchased==first_day).all()
     total = 0
@@ -68,27 +73,25 @@ def map_exp_date(user):
 @routes.route("/", methods=["GET"])
 @login_required
 def home():
-    if "email" in session:
-        user = User.query.filter_by(email=session["email"]).first()
-        if Income.query.filter_by(user=user.id).first() == None:
-            return redirect(url_for("routes.NewUserIncome"))
-        if user.NextIncomeDate == None:
-            return redirect(url_for("routes.nextIncomeDate"))
-        user_data =  gather_user_data(session["email"])
-    if user_data["account"].NextIncomeDate <= datetime.date.today():
-        return redirect(url_for("routes.updateIncomePage"))
-    all_dates = date_range_list(user_data["income"].date, user_data["account"].NextIncomeDate)
-    ogdaysLeft = calculateDaysLeft(user_data["income"].date, user_data["account"].NextIncomeDate)
-    original_spend = spendAmount(user_data["income"].amount, ogdaysLeft)
+    user = User.query.filter(User.email == session["email"]).first()
+    if Income.query.filter(Income.user == user.id).first() == None:
+        return redirect(url_for("routes.NewUserIncome"))
+    if user.NextIncomeDate == None:
+        return redirect(url_for("routes.nextIncomeDate"))
+    user = UserData(session["email"])
+    """ calculate data for home page """
+    all_dates = date_range_list(user.income.date, user.account.NextIncomeDate)
+    ogdaysLeft = calculateDaysLeft(user.income.date, user.account.NextIncomeDate)
+    original_spend = spendAmount(user.income.amount, ogdaysLeft)
     
-    daysLeft = calculateDaysLeft(currentDay, user_data["account"].NextIncomeDate)
-    exp_before_today = Expenses.query.filter(Expenses.user==user_data["account"].id).filter(Expenses.date_purchased >= user_data["income"].date).filter(Expenses.date_purchased < currentDay).all()
-    today_expenses = calculateExpenses(exp_before_today)
-    today_income = calculateIncome(user_data["income"].amount, today_expenses)
+    daysLeft = calculateDaysLeft(currentDay, user.account.NextIncomeDate)
+    exp_before_today = Expenses.query.filter(Expenses.user==user.account.id).filter(Expenses.date_purchased >= user.income.date).filter(Expenses.date_purchased < currentDay).all()
+    today_expenses = totalExpenses(exp_before_today)
+    today_income = netIncome(user.income.amount, today_expenses)
     today_spend = round(spendAmount(today_income, daysLeft),2)
 
-    exp_today = Expenses.query.filter(Expenses.user==user_data["account"].id).filter(Expenses.date_purchased == currentDay).all()
-    spent_today = calculateExpenses(exp_today)
+    exp_today = Expenses.query.filter(Expenses.user==user.account.id).filter(Expenses.date_purchased == currentDay).all()
+    spent_today = totalExpenses(exp_today)
     net_spend = round(today_spend - spent_today,2)
     if net_spend > 0:
         net_spend = str(f"+${net_spend}")
@@ -99,21 +102,21 @@ def home():
     """ chart data """
     chart_expenses = []
     chart_label_days = month_day_fromDate(all_dates)
-    chart_dates = date_range_list(user_data["income"].date, currentDay)
+    chart_dates = date_range_list(user.income.date, currentDay)
     for date in chart_dates:
-        date_expenses = Expenses.query.filter(Expenses.user==user_data["account"].id).filter(Expenses.date_purchased == date).all()
+        date_expenses = Expenses.query.filter(Expenses.user==user.account.id).filter(Expenses.date_purchased == date).all()
         total =0
         for exp in date_expenses:
             total += exp.cost    
         chart_expenses.append(total)
     dailySpend = []
     for date in chart_dates:
-        new_expenses = Expenses.query.filter(Expenses.user==user_data["account"].id).filter(Expenses.date_purchased < date).filter(Expenses.date_purchased >= user_data["income"].date).all()
+        new_expenses = Expenses.query.filter(Expenses.user==user.account.id).filter(Expenses.date_purchased < date).filter(Expenses.date_purchased >= user.income.date).all()
         total = 0
         for exp in new_expenses:
             total += exp.cost 
-        dLeft = calculateDaysLeft(date, user_data["account"].NextIncomeDate)
-        newIncome = calculateIncome(user_data["income"].amount, total)
+        dLeft = calculateDaysLeft(date, user.account.NextIncomeDate)
+        newIncome = netIncome(user.income.amount, total)
         new_spend = spendAmount(newIncome, dLeft)
         dailySpend.append(new_spend)
     chart_map = {
@@ -123,16 +126,16 @@ def home():
         "daily_spend": dailySpend
     }
 
-    map_exp = map_exp_date(user_data)
+    map_exp = map_exp_date(user)
 
-    nextIncDate = user_data["account"].NextIncomeDate
-    total_expense = calculateExpenses(user_data["expenses"])
-    incomeAvailable = calculateIncome(user_data["income"].amount, total_expense)
+    nextIncDate = user.account.NextIncomeDate
+    total_expense = totalExpenses(user.expenses)
+    incomeAvailable = netIncome(user.income.amount, total_expense)
     income_info_data = {
         "inc_available":round(incomeAvailable,2),
         "nid":nextIncDate,
-        "income_amount": user_data["income"].amount,
-        "inc_date": user_data["income"].date
+        "income_amount": user.income.amount,
+        "inc_date": user.income.date
     }
     return render_template("home.html", chart_map=chart_map, expenses_map=map_exp, income_map=income_info_data)
 
@@ -141,36 +144,36 @@ def home():
 @login_required
 def expenses_page():
     if "email" in session:
-        user_data = gather_user_data(session["email"])
+        user = UserData(session["email"])
     if request.method == "POST":
         data = request.form
         expense = data["expenseName"]
         cost = data["expenseCost"]
         pDate = data["datePurchased"]
         date_object = datetime.datetime.strptime(pDate, '%Y-%m-%d').date()
-        addExpense(expense, user_data["account"].id, float(cost), date_object)
+        addExpense(expense, user.account.id, float(cost), date_object)
         return redirect("expenses")
     elif request.method == "GET":
-        total_expense = calculateExpenses(user_data["expenses"])
-        map_exp = map_exp_date(user_data)
-        return render_template("expenses.html", expensesList = user_data["expenses"], total_exp=total_expense, expenses_map=map_exp)
+        total_expense = totalExpenses(user.expenses)
+        map_exp = map_exp_date(user)
+        return render_template("expenses.html", expensesList = user.expenses, total_exp=total_expense, expenses_map=map_exp)
 
 @routes.route("/fillexpenses", methods=["GET", "POST"])
 @login_required
 def fillexpenses():
     if "email" in session:
-        user_data =  gather_user_data(session["email"])
+        user = UserData(session["email"])
     if request.method == "POST":
         data = request.form
         expense = data["expenseName"]
         cost = data["expenseCost"]
         pDate = data["datePurchased"]
         date_object = datetime.datetime.strptime(pDate, '%Y-%m-%d').date()
-        addExpense(expense, user_data["account"].id, float(cost), date_object)
+        addExpense(expense, user.account.id, float(cost), date_object)
         return redirect(url_for("routes.fillexpenses"))
     elif request.method == "GET":
-        total_expense = calculateExpenses(user_data["expenses"])
-        return render_template("remainingExpenses.html", expensesList = user_data["expenses"], total_exp=total_expense)
+        total_expense = totalExpenses(user.expenses)
+        return render_template("remainingExpenses.html", expensesList = user.expenses, total_exp=total_expense)
 
 
 @routes.route("/NextIncomeDate", methods =["GET","POST"])
@@ -179,12 +182,13 @@ def nextIncomeDate():
     NID=None
     print("In next income date page")
     if "email" in session:
-        user_data = User.query.filter_by(email=session["email"]).first()
+        user = User.query.filter(User.email == session["email"]).first()
     if request.method == "POST":
         data = request.form
         # pDate = data["datePurchased"]
         date_object = datetime.datetime.strptime(data["NextIncomeDateInput"], '%Y-%m-%d').date()
-        user_data.NextIncomeDate = date_object
+        user.NextIncomeDate = date_object
+        db.session.add(user)
         db.session.commit()
         return redirect(url_for("routes.home"))
     elif request.method == "GET":
@@ -194,19 +198,17 @@ def nextIncomeDate():
 @login_required
 def updateIncomePage():
     if "email" in session:
-        user = session["email"]
-        print(user)
-        user_data = gather_user_data(user)
+        user = UserData(session["email"])
     if request.method == "POST":
         print("form submitted")
         data = request.form
         amount = float(data["incomeAmount"])
-        newIncome = Income(amount=amount,date=user_data["account"].NextIncomeDate, user=user_data["account"].id)
+        newIncome = Income(amount=amount,date=user.account.NextIncomeDate, user=user.account.id)
         db.session.add(newIncome)
         db.session.commit()
         return redirect(url_for("routes.nextIncomeDate"))
     elif request.method == "GET":
-        return render_template("incomeUpdate.html", income_date=user_data["account"].NextIncomeDate)
+        return render_template("incomeUpdate.html", income_date=user.account.NextIncomeDate)
    
 @routes.route("/NewUserIncome", methods = ["GET","POST"])
 def NewUserIncome():
@@ -229,15 +231,15 @@ def NewUserIncome():
 @login_required
 def income_info():
     if "email" in session:
-        user_data =  gather_user_data(session["email"])
-    nextIncDate = user_data["account"].NextIncomeDate
-    total_expense = calculateExpenses(user_data["expenses"])
-    incomeAvailable = calculateIncome(user_data["income"].amount, total_expense)
+        user = UserData(session["email"])
+    nextIncDate = user.account.NextIncomeDate
+    total_expense = totalExpenses(user.expenses)
+    incomeAvailable = netIncome(user.income.amount, total_expense)
     income_info_data = {
         "inc_available":round(incomeAvailable,2),
         "nid":nextIncDate,
-        "income_amount": user_data["income"].amount,
-        "inc_date": user_data["income"].date
+        "income_amount": user.income.amount,
+        "inc_date": user.income.date
     }
     return render_template("incomeInfo.html", data=income_info_data)
 
@@ -268,19 +270,19 @@ def month_day_fromDate(date_list):
 @login_required
 def spend_page():
     if "email" in session:
-        user_data =  gather_user_data(session["email"])
-    all_dates = date_range_list(user_data["income"].date, user_data["account"].NextIncomeDate)
-    ogdaysLeft = calculateDaysLeft(user_data["income"].date, user_data["account"].NextIncomeDate)
-    original_spend = spendAmount(user_data["income"].amount, ogdaysLeft)
+        user = UserData(session["email"])
+    all_dates = date_range_list(user.income.date, user.account.NextIncomeDate)
+    ogdaysLeft = calculateDaysLeft(user.income.date, user.account.NextIncomeDate)
+    original_spend = spendAmount(user.income.amount, ogdaysLeft)
     
-    daysLeft = calculateDaysLeft(currentDay, user_data["account"].NextIncomeDate)
-    exp_before_today = Expenses.query.filter(Expenses.user==user_data["account"].id).filter(Expenses.date_purchased >= user_data["income"].date).filter(Expenses.date_purchased < currentDay).all()
-    today_expenses = calculateExpenses(exp_before_today)
-    today_income = calculateIncome(user_data["income"].amount, today_expenses)
+    daysLeft = calculateDaysLeft(currentDay, user.account.NextIncomeDate)
+    exp_before_today = Expenses.query.filter(Expenses.user==user.account.id).filter(Expenses.date_purchased >= user.income.date).filter(Expenses.date_purchased < currentDay).all()
+    today_expenses = totalExpenses(exp_before_today)
+    today_income = netIncome(user.income.amount, today_expenses)
     today_spend = round(spendAmount(today_income, daysLeft),2)
 
-    exp_today = Expenses.query.filter(Expenses.user==user_data["account"].id).filter(Expenses.date_purchased == currentDay).all()
-    spent_today = calculateExpenses(exp_today)
+    exp_today = Expenses.query.filter(Expenses.user==user.account.id).filter(Expenses.date_purchased == currentDay).all()
+    spent_today = totalExpenses(exp_today)
     net_spend = round(today_spend - spent_today,2)
     if net_spend > 0:
         net_spend = str(f"+${net_spend}")
@@ -291,21 +293,21 @@ def spend_page():
     """ chart data """
     chart_expenses = []
     chart_label_days = month_day_fromDate(all_dates)
-    chart_dates = date_range_list(user_data["income"].date, currentDay)
+    chart_dates = date_range_list(user.income.date, currentDay)
     for date in chart_dates:
-        date_expenses = Expenses.query.filter(Expenses.user==user_data["account"].id).filter(Expenses.date_purchased == date).all()
+        date_expenses = Expenses.query.filter(Expenses.user==user.account.id).filter(Expenses.date_purchased == date).all()
         total =0
         for exp in date_expenses:
             total += exp.cost    
         chart_expenses.append(total)
     dailySpend = []
     for date in chart_dates:
-        new_expenses = Expenses.query.filter(Expenses.user==user_data["account"].id).filter(Expenses.date_purchased < date).filter(Expenses.date_purchased >= user_data["income"].date).all()
+        new_expenses = Expenses.query.filter(Expenses.user==user.account.id).filter(Expenses.date_purchased < date).filter(Expenses.date_purchased >= user.income.date).all()
         total = 0
         for exp in new_expenses:
             total += exp.cost 
-        dLeft = calculateDaysLeft(date, user_data["account"].NextIncomeDate)
-        newIncome = calculateIncome(user_data["income"].amount, total)
+        dLeft = calculateDaysLeft(date, user.account.NextIncomeDate)
+        newIncome = netIncome(user.income.amount, total)
         new_spend = spendAmount(newIncome, dLeft)
         dailySpend.append(new_spend)
     chart_map = {
@@ -320,23 +322,23 @@ def spend_page():
 @login_required
 def cycles_page():
     if "email" in session:
-        user_data =  gather_user_data(session["email"])
-    all_cycles = Cycle.query.filter(Cycle.user==user_data["account"].id).filter(Cycle.start_date != user_data["income"].date).order_by(desc(Cycle.start_date)).all()
+        user = UserData(session["email"])
+    all_cycles = Cycle.query.filter(Cycle.user==user.account.id).filter(Cycle.start_date != user.income.date).order_by(desc(Cycle.start_date)).all()
     return render_template("cycles.html", all_cycles=all_cycles)
 
 @routes.route("/cycle/<cycle_id>", methods=["GET"])
 @login_required
 def cycle_info(cycle_id):
     if "email" in session:
-        user_data =  gather_user_data(session["email"])
-    cycle = Cycle.query.filter(Cycle.cid==cycle_id).filter(Cycle.user == user_data["account"].id).first()
-    cycle_income = Income.query.filter(Income.date == cycle.start_date).filter(Income.user == user_data["account"].id).first()    
+        user = UserData(session["email"])
+    cycle = Cycle.query.filter(Cycle.cid==cycle_id).filter(Cycle.user == user.account.id).first()
+    cycle_income = Income.query.filter(Income.date == cycle.start_date).filter(Income.user == user.account.id).first()    
     all_dates = date_range_list(cycle.start_date, cycle.end_date)
     chart_label_days = month_day_fromDate(all_dates)
 
     chart_expenses = []
     for date in all_dates:
-        date_expenses = Expenses.query.filter(Expenses.user==user_data["account"].id).filter(Expenses.date_purchased == date).all()
+        date_expenses = Expenses.query.filter(Expenses.user==user.account.id).filter(Expenses.date_purchased == date).all()
         total =0
         for exp in date_expenses:
             total += exp.cost    
@@ -347,12 +349,12 @@ def cycle_info(cycle_id):
     
     dailySpend = []
     for date in all_dates:
-        new_expenses = Expenses.query.filter(Expenses.user==user_data["account"].id).filter(Expenses.date_purchased < date).filter(Expenses.date_purchased >= cycle.start_date).all()
+        new_expenses = Expenses.query.filter(Expenses.user==user.account.id).filter(Expenses.date_purchased < date).filter(Expenses.date_purchased >= cycle.start_date).all()
         total = 0
         for exp in new_expenses:
             total += exp.cost 
         dLeft = calculateCycleDays(date, cycle.end_date)
-        newIncome = calculateIncome(cycle_income.amount, total)
+        newIncome = netIncome(cycle_income.amount, total)
         print(newIncome, dLeft, date)
         new_spend = spendAmount(newIncome, dLeft)
         dailySpend.append(new_spend)
