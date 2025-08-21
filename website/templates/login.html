@@ -1,7 +1,9 @@
 {% extends "base.html" %}
-
+{% block css %}
+<link rel="stylesheet" text="text/css" href="{{ url_for('static',filename='styles.css') }}">
+{% endblock %}
 {% block body %}
-<div class="column is-4 is-offset-4">
+<div class="column is-4 is-offset-4 form">
     <h3 class="title">Login</h3>
     <div class="box">
         {% with messages = get_flashed_messages() %}
@@ -25,11 +27,10 @@
             </div>
             <div class="field">
                 <label class="checkbox">
-                    <input type="checkbox" name="remember">
-                    Remember me
+                    <input type="checkbox" name="remember">Remember me
                 </label>
             </div>
-            <button class="button is-block is-info is-large is-fullwidth">Login</button>
+            <button class="button button-confirm is-block is-info is-large is-fullwidth">Login</button>
         </form>
     </div>
 </div>

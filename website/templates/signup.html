@@ -1,6 +1,9 @@
 {% extends "base.html" %}
-
+{% block css %}
+<link rel="stylesheet" text="text/css" href="{{ url_for('static',filename='styles.css') }}">
+{% endblock %}
 {% block body %}
+<div class="form">
 <div class="column is-4 is-offset-4">
     <h3 class="title">Sign Up</h3>
     <div class="box">
@@ -32,6 +35,7 @@
 
             <button class="button is-block is-info is-large is-fullwidth">Sign Up</button>
         </form>
+        </div>
     </div>
 </div>
 {% endblock %}

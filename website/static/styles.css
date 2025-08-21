@@ -45,8 +45,8 @@ a.list-group-item {
 }
 
 canvas {
-    height: 500px;
-    width: 700px;
+    height: 300px;
+    width: 500px;
 }
 .chart {
     padding: 2rem;
