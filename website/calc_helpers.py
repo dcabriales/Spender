@@ -6,27 +6,21 @@ import datetime
 
 currentDay = datetime.date.today()
 
-""" Chart functions """
-def date_range_list(start_date, end_date):
-    # Return generator for a list datetime.date objects (inclusive) between start_date and end_date (inclusive).
+# Return generator for a list datetime.date objects (inclusive) between start_date and end_date (inclusive).
+def build_list_dates(start_date, end_date):
     date_list = []
-    curr_date = start_date
-    while curr_date <= end_date:
-        date_list.append(curr_date)
-        curr_date += timedelta(days=1)
+    while start_date <= end_date:
+        date_list.append(start_date)
+        start_date += timedelta(days=1)
     return date_list
-def month_day_fromDate(date_list):
-    dataset = []
-    for full_date in date_list:
-        dataset.append(f"{full_date.month}/{full_date.day}")
-    return dataset
-def month_day_fromDate(date_list):
-    dataset = []
-    for full_date in date_list:
-        dataset.append(f"{full_date.month}/{full_date.day}")
-    return dataset
 
-
+# Return list of dates formatted as "M/D" from a list of datetime.date objects.
+def chart_date_labels(start_date, end_date):
+    date_list = []
+    while start_date <= end_date:
+        date_list.append(f"{start_date.month}/{start_date.day}")
+        start_date += timedelta(days=1)
+    return date_list
 
 def calc_days_remaining(start_date, end_date):
         return int((end_date - start_date).days)
