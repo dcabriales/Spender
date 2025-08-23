@@ -1,5 +1,5 @@
 from datetime import timedelta
-from .models import Expenses
+from .models import Expenses, Cycle
 from . import db
 import datetime
 
@@ -39,10 +39,25 @@ def calculateCycleDays(dateIncome, nextIncomeDate):
     days = nextIncomeDate - dateIncome + timedelta(days=1)
     return int(days.days)
 
-def addExpense(name, user_id, cost, date):
-    new_expense = Expenses(expense=name, user=user_id, cost=cost, date_purchased=date)
+def add_exp_to_db(user_id, form):
+    data = form
+    expense_name = data["expenseName"]
+    cost = data["expenseCost"]
+    purchase_date = data["datePurchased"]
+    date_object = datetime.datetime.strptime(purchase_date, '%Y-%m-%d').date()
+    new_expense = Expenses(expense=expense_name, user=user_id, cost=cost, date_purchased=date_object)
     db.session.add(new_expense)
     db.session.commit()
+
+def add_nid_db_cycle(user, form):
+    prev_nid = user.NextIncomeDate
+    new_nid = datetime.datetime.strptime(form["NextIncomeDateInput"], '%Y-%m-%d').date()
+    user.NextIncomeDate = new_nid
+    db.session.add(user)
+    new_Cycle = Cycle(user=user.id, start_date=prev_nid, end_date=new_nid)
+    db.session.add(new_Cycle)
+    db.session.commit()
+    return
 
 def map_exp_date(user):
     mapped_expenses =  {}

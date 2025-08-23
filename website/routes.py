@@ -2,20 +2,18 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from flask_login import login_user, login_required, logout_user
 import datetime
 from .models import User, Expenses, Income, Cycle
-from .classes import UserData, Chart, CycleClass, calc_days_remaining, calc_spendability, netIncome, build_list_dates, chart_date_labels
+from .classes import UserData, Chart, CycleClass, calc_days_remaining, calc_spendability, netIncome
 from .calc_helpers import (
-    build_list_dates,
-    chart_date_labels,
     calc_days_remaining,
     calc_spendability,
     netIncome,
     totalExpenses,
-    addExpense,
+    add_exp_to_db,
     map_exp_date,
-    calculateCycleDays,
+    add_nid_db_cycle,  # Added import for add_nid_db_cycle
 )
 from . import db
-from sqlalchemy import desc, asc
+from sqlalchemy import desc
 
 
 currentDay = datetime.date.today()
@@ -31,8 +29,8 @@ def home():
     if user.NextIncomeDate == None:
         return redirect(url_for("routes.nextIncomeDate"))
     user_Chart = Chart(session["email"])
-    """ calculate data for home page """
 
+    """ calculate data for home page """
     daysLeft = calc_days_remaining(currentDay, user_Chart.user.NextIncomeDate)
     exp_before_today = Expenses.query.filter(Expenses.user==user_Chart.user.id).filter(Expenses.date_purchased >= user_Chart.income.date).filter(Expenses.date_purchased < currentDay).all()
     today_expenses = totalExpenses(exp_before_today)
@@ -78,19 +76,13 @@ def home():
 
     return render_template("home.html", chart_map=user_Chart.chart_page_details(), expenses_map=map_exp, income_map=income_info_data, cycles=all_cycles)
 
-
 @routes.route("/expenses", methods=["GET", "POST"])
 @login_required
 def expenses_page():
     if "email" in session:
         user = UserData(session["email"])
     if request.method == "POST":
-        data = request.form
-        expense = data["expenseName"]
-        cost = data["expenseCost"]
-        pDate = data["datePurchased"]
-        date_object = datetime.datetime.strptime(pDate, '%Y-%m-%d').date()
-        addExpense(expense, user.user.id, float(cost), date_object)
+        add_exp_to_db(user.user.id, request.form)
         return redirect("expenses")
     elif request.method == "GET":
         total_expense = totalExpenses(user.expenses)
@@ -103,12 +95,7 @@ def fillexpenses():
     if "email" in session:
         user = UserData(session["email"])
     if request.method == "POST":
-        data = request.form
-        expense = data["expenseName"]
-        cost = data["expenseCost"]
-        pDate = data["datePurchased"]
-        date_object = datetime.datetime.strptime(pDate, '%Y-%m-%d').date()
-        addExpense(expense, user.user.id, float(cost), date_object)
+        add_exp_to_db(user.user.id, request.form)
         return redirect(url_for("routes.fillexpenses"))
     elif request.method == "GET":
         total_expense = totalExpenses(user.expenses)
@@ -122,18 +109,8 @@ def nextIncomeDate():
     print("In next income date page")
     if "email" in session:
         user = User.query.filter(User.email == session["email"]).first()
-        prev_nid = datetime.datetime.strptime(data["NextIncomeDateInput"], '%Y-%m-%d').date()
-
     if request.method == "POST":
-        data = request.form
-        # pDate = data["datePurchased"]
-        date_object = datetime.datetime.strptime(data["NextIncomeDateInput"], '%Y-%m-%d').date()
-        user.NextIncomeDate = date_object
-        db.session.add(user)
-        db.session.commit()
-        new_Cycle = Cycle(user=user.id, start_date=prev_nid, end_date=date_object)
-        db.session.add(new_Cycle)
-        db.session.commit()
+        add_nid_db_cycle(request.form, user.id)
         return redirect(url_for("routes.home"))
     elif request.method == "GET":
         return render_template("NextIncomeUpdate.html", NID=NID)
