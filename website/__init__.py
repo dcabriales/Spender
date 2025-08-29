@@ -20,7 +20,9 @@ def create_app():
 
     from .routes import routes
     from .auth import auth as auth_blueprint
+    from .new_user_routes import new_user as new_user_blueprint
 
+    app.register_blueprint(new_user_blueprint, url_prefix='/new_user/')
     app.register_blueprint(routes, url_prefix='/')
     app.register_blueprint(auth_blueprint)
 

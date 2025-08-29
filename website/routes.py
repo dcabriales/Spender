@@ -25,7 +25,7 @@ routes = Blueprint("routes", __name__)
 def home():
     user = User.query.filter(User.email == session["email"]).first()
     if Income.query.filter(Income.user == user.id).first() == None:
-        return redirect(url_for("routes.NewUserIncome"))
+        return redirect(url_for("new_user.NewUserIncome"))
     if user.NextIncomeDate == None:
         return redirect(url_for("routes.nextIncomeDate"))
     user_Chart = Chart(session["email"])
@@ -101,7 +101,6 @@ def fillexpenses():
         total_expense = totalExpenses(user.expenses)
         return render_template("remainingExpenses.html", expensesList = user.expenses, total_exp=total_expense)
 
-
 @routes.route("/NextIncomeDate", methods =["GET","POST"])
 @login_required
 def nextIncomeDate():
@@ -130,22 +129,6 @@ def updateIncomePage():
         return redirect(url_for("routes.nextIncomeDate"))
     elif request.method == "GET":
         return render_template("incomeUpdate.html", income_date=user.user.NextIncomeDate)
-   
-@routes.route("/NewUserIncome", methods = ["GET","POST"])
-def NewUserIncome():
-    if "email" in session:
-        userEmail = session["email"]
-        user = User.query.filter_by(email=userEmail).first()
-    if request.method == "POST":
-        data = request.form
-        amount = float(data["incomeAmount"])
-        date = datetime.datetime.strptime(data["incomeDate"], '%Y-%m-%d').date()
-        newIncome = Income(amount=amount,date=date, user=user.id)
-        db.session.add(newIncome)
-        db.session.commit()
-        return redirect(url_for("routes.home"))
-    elif request.method == "GET":
-        return render_template("newUserIncome.html")
 
 @routes.route("/deleteExpense/<expense_id>",methods=["POST"])
 @login_required
