@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 {% block css %}
-<link rel="stylesheet" text="text/css" href="{{ url_for('static',filename='styles.css') }}">
+<link rel="stylesheet" text="text/css" href="{{ url_for('static',filename='new_user_styles.css') }}">
 {% endblock %}
 {% block title %}Spender Home Page{% endblock %}
-{% block body %}<h1>Income</h1>
+{% block body %}
+<div class="new-user">
 <form method="POST">
-<h3 align="center">Update with your most recent income</h3>
+<h3 align="center">Input your income-related details:</h3>
 <div>
     <div class="input-group">
         <label for="incomeAmount" class="form-label">Income Amount</label>
@@ -18,12 +19,18 @@
     <div>
         <label for="incomeDate" class="form-label">Date of Income</label>
         <input type="date" class="form-control" onfocus="showPicker" name="incomeDate" id="incomeDate">
-    </div>    
-
+    </div>
+    <div class="mx-auto p-2" style="width: 300px;">
+    <div>
+        <label for="NextIncomeDateInput" class="form-label">Date of your next Income</label>
+        <input type="date" class="form-control" onfocus="showPicker" name="NextIncomeDateInput" id="NextIncomeDateInput">
+    </div>
     <br>
     <div class="row justify-content-center">
     <button type="submit" class="btn btn-secondary btn-lg">Submit</button>
+    </div>
+    <br>
 </div>
 </div>
-</form>
+
 {% endblock %}

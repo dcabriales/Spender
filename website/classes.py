@@ -19,6 +19,9 @@ class UserData:
         self.income = Income.query.filter(Income.user == self.user.id).order_by(Income.date.desc()).first()
         self.expenses = Expenses.query.filter(Expenses.user == self.user.id).filter(Expenses.date_purchased >= self.income.date).all()
 
+    def __str__(self):
+        return f"'{self.email}' - User ID: {self.user.id} - Income: {self.income.amount} on {self.income.date}"
+
 class Chart(UserData):
     def __init__(self, email):
         super().__init__(email)
@@ -27,6 +30,8 @@ class Chart(UserData):
         self.income_amount = self.income.amount
         self.chart_date_labels = chart_date_labels(self.start_date, self.end_date)
         self.chart_map_values = self.chart_calc_data()
+    def __str__(self):
+        return f"Chart for '{self.email}' from {self.start_date} to {self.end_date} with income {self.income_amount}"
 
     def chart_page_details(self):
         chart_details = {
@@ -40,6 +45,8 @@ class Chart(UserData):
     def chart_calc_data(self):
         # Original spendability calculation
         og_days = calc_days_remaining(self.start_date, self.end_date)
+        print(self.start_date, self.end_date)
+        print(self.income_amount, og_days)
         og_spendability = calc_spendability(self.income_amount, og_days)
         # Income Date to Current Day calculations
         dates_until_today = build_list_dates(self.start_date, currentDay)

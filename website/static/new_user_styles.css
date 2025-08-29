@@ -1,0 +1,17 @@
+.new-user {
+    margin-top: 40px;
+    justify-items: center;
+    align-items: center;
+    /* gap: 0 50px; */
+}
+
+.new-cycle-grid {
+    display: grid;
+    margin-top: 40px;
+    grid-template-areas: 
+        "income     expenses";
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    justify-items: center;
+    align-items: center;
+}

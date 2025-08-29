@@ -23,11 +23,14 @@ routes = Blueprint("routes", __name__)
 @routes.route("/", methods=["GET"])
 @login_required
 def home():
-    user = User.query.filter(User.email == session["email"]).first()
-    if Income.query.filter(Income.user == user.id).first() == None:
-        return redirect(url_for("new_user.NewUserIncome"))
-    if user.NextIncomeDate == None:
-        return redirect(url_for("routes.nextIncomeDate"))
+    user = UserData(session["email"])
+    print(user)
+    """ Check if user is new """
+    if user.income == None:
+        return redirect(url_for("new_user.new_details"))
+    """ Check if Cycle has ended  """
+    if user.user.NextIncomeDate <= currentDay:
+        return redirect(url_for("routes.new_cycle"))
     user_Chart = Chart(session["email"])
 
     """ calculate data for home page """
@@ -89,47 +92,6 @@ def expenses_page():
         map_exp = map_exp_date(user)
         return render_template("expenses.html", expensesList = user.expenses, total_exp=total_expense, expenses_map=map_exp)
 
-@routes.route("/fillexpenses", methods=["GET", "POST"])
-@login_required
-def fillexpenses():
-    if "email" in session:
-        user = UserData(session["email"])
-    if request.method == "POST":
-        add_exp_to_db(user.user.id, request.form)
-        return redirect(url_for("routes.fillexpenses"))
-    elif request.method == "GET":
-        total_expense = totalExpenses(user.expenses)
-        return render_template("remainingExpenses.html", expensesList = user.expenses, total_exp=total_expense)
-
-@routes.route("/NextIncomeDate", methods =["GET","POST"])
-@login_required
-def nextIncomeDate():
-    NID=None
-    print("In next income date page")
-    if "email" in session:
-        user = User.query.filter(User.email == session["email"]).first()
-    if request.method == "POST":
-        add_nid_db_cycle(request.form, user.id)
-        return redirect(url_for("routes.home"))
-    elif request.method == "GET":
-        return render_template("NextIncomeUpdate.html", NID=NID)
-   
-@routes.route("/UpdateIncome", methods =["GET","POST"])
-@login_required
-def updateIncomePage():
-    if "email" in session:
-        user = UserData(session["email"])
-    if request.method == "POST":
-        print("form submitted")
-        data = request.form
-        amount = float(data["incomeAmount"])
-        newIncome = Income(amount=amount,date=user.user.NextIncomeDate, user=user.user.id)
-        db.session.add(newIncome)
-        db.session.commit()
-        return redirect(url_for("routes.nextIncomeDate"))
-    elif request.method == "GET":
-        return render_template("incomeUpdate.html", income_date=user.user.NextIncomeDate)
-
 @routes.route("/deleteExpense/<expense_id>",methods=["POST"])
 @login_required
 def delete_expense(expense_id):
@@ -144,3 +106,20 @@ def cycle_info(cycle_id):
     if "email" in session:
         user_cycle = CycleClass(session["email"], cycle_id)
     return render_template("cycle_info.html", chart_map=user_cycle.cycle_map())
+
+@routes.route("/new_cycle", methods=["GET","POST"])
+@login_required
+def new_cycle():
+    if "email" in session:
+        user = UserData(session["email"])
+    if request.method == "POST":
+        if request.form.get("form_type") == "expense":
+            add_exp_to_db(user.user.id, request.form)
+            return redirect(url_for("routes.new_cycle"))
+        if request.form.get("form_type") == "income":
+            add_nid_db_cycle(user.user, request.form)
+            return redirect(url_for("routes.new_cycle"))
+        else:
+            return redirect(url_for("routes.home"))
+    if request.method == "GET":
+        return render_template("new_cycle.html")

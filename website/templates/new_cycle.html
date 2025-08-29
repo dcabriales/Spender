@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block css %}
+<link rel="stylesheet" text="text/css" href="{{ url_for('static',filename='styles.css') }}">
+<link rel="stylesheet" text="text/css" href="{{ url_for('static',filename='new_user_styles.css') }}">
+{% endblock %}
+{% block title %}New Cycle{% endblock %}
+{% block body %}
+<div class="new-cycle-grid">
+<div class="income-grid">
+<form method="POST">
+<h3 align="center">Input your new income details and next income date:</h3>
+    <div class="input-group">
+        <label for="incomeAmount" class="form-label">Income Amount</label>
+        <div class="input-group">
+            <span class="input-group-text" id="basic-addon1">$</span>
+            <input type="text" class="form-control" name="incomeAmount" id="incomeAmount" placeholder="Ex. 25.23" aria-describedby="basic-addon1">
+        </div>
+
+    </div>
+    <div>
+        <label for="incomeDate" class="form-label">Date of Income</label>
+        <input type="date" class="form-control" onfocus="showPicker" name="incomeDate" id="incomeDate">
+    </div>
+    <div class="mx-auto p-2" style="width: 300px;">
+    <div>
+        <label for="NextIncomeDateInput" class="form-label">Date of your next Income</label>
+        <input type="date" class="form-control" onfocus="showPicker" name="NextIncomeDateInput" id="NextIncomeDateInput">
+    </div>
+    <div>
+    <button id="income-submit-btn" type="submit" name="form_type" value="income" class="button-confirm btn btn-secondary btn-lg" id="income-submit-btn">Submit Income</button>
+
+</div>
+</div>
+</form>
+<script>
+document.getElementById('income-form').onsubmit = function(e) {
+    document.getElementById('income-submit-btn').disabled = true;
+    // Allow the form to submit
+};
+</script>
+</div>
+
+<div class="expense-grid">
+<form method="POST">
+<h3 align="center">Insert any remaining expenses from your past cycle</h1>
+<h3 align="center">Cycle: ({{lastIncome}})-({{nid}})</h2>
+<h3 align="center">Expense Tracker</h3>
+<div class="mx-auto p-2" style="width: 300px;">
+    <div class="mb-3">
+        <label for="expenseName" class="form-label">Expense Name</label>
+        <input type="text" class="form-control" name="expenseName" id="expenseName" placeholder="Ex. Food">
+    </div>
+
+
+      <div class="input-group mb-3">
+        <label for="costInput" class="form-label">Cost</label>
+        <div class="input-group">
+            <span class="input-group-text" id="basic-addon1">$</span>
+            <input type="text" class="form-control" name="costInput" id="costInput" placeholder="Ex. 25.23" aria-describedby="basic-addon1">
+        </div>    
+    </div>
+   
+    <div>
+        <label for="purchaseDate" class="form-label">Date of Purchase</label>
+        <input type="date" class="form-control" onfocus="showPicker" name="purchaseDate" id="purchaseDate">
+    </div>
+
+
+    <br>
+    <div class="row justify-content-center">
+    <button type="submit" class="button-confirm btn btn-secondary btn-lg">Submit</button>
+</div>
+</div>
+</form>
+</div>
+<div class="row justify-content-center">
+        <a class= "button-confirm" name="form_type" value="expense" style="background-color:rgb(0,0,80);color:#e3f2fd" href="{{url_for('routes.home')}}">Done</a>
+</div>
+</div>
+{% endblock %}

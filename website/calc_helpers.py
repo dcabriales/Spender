@@ -1,5 +1,5 @@
 from datetime import timedelta
-from .models import Expenses, Cycle
+from .models import Expenses, Cycle, Income
 from . import db
 import datetime
 
@@ -50,11 +50,16 @@ def add_exp_to_db(user_id, form):
     db.session.commit()
 
 def add_nid_db_cycle(user, form):
+    amount = float(form["incomeAmount"])
+    newIncome = Income(amount=amount,date=user.NextIncomeDate, user=user.id)
     prev_nid = user.NextIncomeDate
     new_nid = datetime.datetime.strptime(form["NextIncomeDateInput"], '%Y-%m-%d').date()
+    new_Cycle = Cycle(user=user.id, start_date=prev_nid, end_date=new_nid)
     user.NextIncomeDate = new_nid
     db.session.add(user)
-    new_Cycle = Cycle(user=user.id, start_date=prev_nid, end_date=new_nid)
+    db.session.commit()
+    db.session.add(newIncome)
+    db.session.commit()
     db.session.add(new_Cycle)
     db.session.commit()
     return
