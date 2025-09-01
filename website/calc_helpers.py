@@ -50,14 +50,14 @@ def add_exp_to_db(user_id, form):
     db.session.commit()
 
 def add_nid_db_cycle(user, form):
+    """" Grab previous cycle details """
+    prev_nid = user.current_cycle.end_date
+    # New income added to DB
     amount = float(form["incomeAmount"])
-    newIncome = Income(amount=amount,date=user.NextIncomeDate, user=user.id)
-    prev_nid = user.NextIncomeDate
+    newIncome = Income(amount=amount, date=prev_nid, user=user.id)
+    # New Cycle to DB
     new_nid = datetime.datetime.strptime(form["NextIncomeDateInput"], '%Y-%m-%d').date()
     new_Cycle = Cycle(user=user.id, start_date=prev_nid, end_date=new_nid)
-    user.NextIncomeDate = new_nid
-    db.session.add(user)
-    db.session.commit()
     db.session.add(newIncome)
     db.session.commit()
     db.session.add(new_Cycle)

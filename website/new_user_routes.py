@@ -17,13 +17,10 @@ def new_details():
         nid = data["NextIncomeDateInput"]
         newIncome = Income(amount=amount,date=income_date, user=user.id)
         db.session.add(newIncome)
-        user.NextIncomeDate = datetime.datetime.strptime(nid, '%Y-%m-%d').date()
-        db.session.commit()
-        db.session.add(user)
         db.session.commit()
         new_Cycle = Cycle(user=user.id, start_date=income_date, end_date=nid)
         db.session.add(new_Cycle)
         db.session.commit()
-        return redirect(url_for("routes.home"))
+        return redirect(url_for("auth.login"))
     elif request.method == "GET":
         return render_template("new_user.html")

@@ -43,7 +43,7 @@ def signup_post():
     new_user = User(email=newEmail, name=name, password=generate_password_hash(password, method='scrypt'))
     db.session.add(new_user)
     db.session.commit()
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('new_user.new_details'))
 
 
 @auth.route('/logout')

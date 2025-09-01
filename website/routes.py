@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
 from flask_login import login_user, login_required, logout_user
 import datetime
-from .models import User, Expenses, Income, Cycle
+from .models import Expenses, Cycle, User
 from .classes import UserData, Chart, CycleClass, calc_days_remaining, calc_spendability, netIncome
 from .calc_helpers import (
     calc_days_remaining,
@@ -26,15 +26,15 @@ def home():
     user = UserData(session["email"])
     print(user)
     """ Check if user is new """
-    if user.income == None:
+    if user.income.amount == None:
         return redirect(url_for("new_user.new_details"))
     """ Check if Cycle has ended  """
-    if user.user.NextIncomeDate <= currentDay:
+    if user.current_cycle.end_date <= currentDay:
         return redirect(url_for("routes.new_cycle"))
     user_Chart = Chart(session["email"])
 
     """ calculate data for home page """
-    daysLeft = calc_days_remaining(currentDay, user_Chart.user.NextIncomeDate)
+    daysLeft = calc_days_remaining(currentDay, user_Chart.end_date)
     exp_before_today = Expenses.query.filter(Expenses.user==user_Chart.user.id).filter(Expenses.date_purchased >= user_Chart.income.date).filter(Expenses.date_purchased < currentDay).all()
     today_expenses = totalExpenses(exp_before_today)
     today_income = netIncome(user_Chart.income.amount, today_expenses)
@@ -51,7 +51,7 @@ def home():
         net_spend = str("$"+net_spend)
     """ chart data """
     map_exp = map_exp_date(user_Chart)
-    nextIncDate = user_Chart.user.NextIncomeDate
+    nextIncDate = user_Chart.end_date
     total_expense = totalExpenses(user_Chart.expenses)
     incomeAvailable = netIncome(user_Chart.income.amount, total_expense)
     income_info_data = {
@@ -64,7 +64,7 @@ def home():
     today_spend = round(calc_spendability(today_income, daysLeft),2)
     exp_before_today = Expenses.query.filter(Expenses.user==user_Chart.user.id).filter(Expenses.date_purchased >= user_Chart.income.date).filter(Expenses.date_purchased < currentDay).all()
     today_expenses = totalExpenses(exp_before_today)
-    daysLeft = calc_days_remaining(currentDay, user_Chart.user.NextIncomeDate)
+    daysLeft = calc_days_remaining(currentDay, user_Chart.end_date)
 
     exp_today = Expenses.query.filter(Expenses.user==user_Chart.user.id).filter(Expenses.date_purchased == currentDay).all()
     spent_today = totalExpenses(exp_today)

@@ -18,15 +18,16 @@ class UserData:
         self.user = User.query.filter(User.email == email).first()
         self.income = Income.query.filter(Income.user == self.user.id).order_by(Income.date.desc()).first()
         self.expenses = Expenses.query.filter(Expenses.user == self.user.id).filter(Expenses.date_purchased >= self.income.date).all()
+        self.current_cycle = Cycle.query.filter(Cycle.user == self.user.id).order_by(Cycle.end_date.desc()).first()
 
     def __str__(self):
-        return f"'{self.email}' - User ID: {self.user.id} - Income: {self.income.amount} on {self.income.date}"
+        return f"'{self.email}' - User ID: {self.user.id} - Income: {self.income.amount} on {self.income.date} - Current Cycle: {self.current_cycle.start_date} to {self.current_cycle.end_date}"
 
 class Chart(UserData):
     def __init__(self, email):
         super().__init__(email)
         self.start_date = self.income.date
-        self.end_date = self.user.NextIncomeDate
+        self.end_date = self.current_cycle.end_date
         self.income_amount = self.income.amount
         self.chart_date_labels = chart_date_labels(self.start_date, self.end_date)
         self.chart_map_values = self.chart_calc_data()

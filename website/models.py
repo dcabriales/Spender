@@ -8,8 +8,6 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(100), unique=True)
     name = db.Column(db.String(30))
     password = db.Column(db.String(512))
-    NextIncomeDate = db.Column(db.Date)
-
 
     def __init__(self, email, name, password):
         self.name = name
