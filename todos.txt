@@ -1,2 +1,2 @@
 date validation
-implement cycles class throughout to use the current cycle instead of chart
+api tests for : new user, current user, expired user, not a user

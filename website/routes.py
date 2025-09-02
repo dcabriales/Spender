@@ -1,19 +1,16 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
 from flask_login import login_user, login_required, logout_user
 import datetime
-from .models import Expenses, Cycle, User
-from .classes import UserData, Chart, CycleClass, calc_days_remaining, calc_spendability, netIncome
+from .models import Expenses
+from .classes import UserData, CycleClass
 from .calc_helpers import (
-    calc_days_remaining,
-    calc_spendability,
     netIncome,
     totalExpenses,
     add_exp_to_db,
     map_exp_date,
-    add_nid_db_cycle,  # Added import for add_nid_db_cycle
+    add_nid_db_cycle
 )
 from . import db
-from sqlalchemy import desc
 
 
 currentDay = datetime.date.today()
@@ -23,61 +20,23 @@ routes = Blueprint("routes", __name__)
 @routes.route("/", methods=["GET"])
 @login_required
 def home():
-    user = UserData(session["email"])
+    user = CycleClass(session["email"])
     print(user)
-    """ Check if user is new """
-    if user.income.amount == None:
-        return redirect(url_for("new_user.new_details"))
     """ Check if Cycle has ended  """
     if user.current_cycle.end_date <= currentDay:
         return redirect(url_for("routes.new_cycle"))
-    user_Chart = Chart(session["email"])
 
-    """ calculate data for home page """
-    daysLeft = calc_days_remaining(currentDay, user_Chart.end_date)
-    exp_before_today = Expenses.query.filter(Expenses.user==user_Chart.user.id).filter(Expenses.date_purchased >= user_Chart.income.date).filter(Expenses.date_purchased < currentDay).all()
-    today_expenses = totalExpenses(exp_before_today)
-    today_income = netIncome(user_Chart.income.amount, today_expenses)
-    today_spend = round(calc_spendability(today_income, daysLeft),2)
-
-    exp_today = Expenses.query.filter(Expenses.user==user_Chart.user.id).filter(Expenses.date_purchased == currentDay).all()
-    spent_today = totalExpenses(exp_today)
-    net_spend = round(today_spend - spent_today,2)
-    if net_spend > 0:
-        net_spend = str(f"+${net_spend}")
-    elif net_spend < 0:
-        net_spend = str(f"${net_spend}")
-    else:
-        net_spend = str("$"+net_spend)
-    """ chart data """
-    map_exp = map_exp_date(user_Chart)
-    nextIncDate = user_Chart.end_date
-    total_expense = totalExpenses(user_Chart.expenses)
-    incomeAvailable = netIncome(user_Chart.income.amount, total_expense)
+    map_exp = map_exp_date(user)
+    total_expense = totalExpenses(user.expenses)
+    incomeAvailable = netIncome(user.income.amount, total_expense)
     income_info_data = {
         "inc_available":round(incomeAvailable,2),
-        "nid":nextIncDate,
-        "income_amount": user_Chart.income.amount,
-        "inc_date": user_Chart.income.date
+        "nid":user.current_cycle.end_date,
+        "income_amount": user.income.amount,
+        "inc_date": user.income.date
     }
-    today_income = netIncome(user_Chart.income.amount, today_expenses)
-    today_spend = round(calc_spendability(today_income, daysLeft),2)
-    exp_before_today = Expenses.query.filter(Expenses.user==user_Chart.user.id).filter(Expenses.date_purchased >= user_Chart.income.date).filter(Expenses.date_purchased < currentDay).all()
-    today_expenses = totalExpenses(exp_before_today)
-    daysLeft = calc_days_remaining(currentDay, user_Chart.end_date)
 
-    exp_today = Expenses.query.filter(Expenses.user==user_Chart.user.id).filter(Expenses.date_purchased == currentDay).all()
-    spent_today = totalExpenses(exp_today)
-    net_spend = round(today_spend - spent_today,2)
-    if net_spend > 0:
-        net_spend = str(f"+${net_spend}")
-    elif net_spend < 0:
-        net_spend = str(f"${net_spend}")
-    else:
-        net_spend = str("$"+net_spend)
-    all_cycles = Cycle.query.filter(Cycle.user == user_Chart.user.id).filter(Cycle.start_date != user_Chart.income.date).order_by(desc(Cycle.start_date)).all()
-
-    return render_template("home.html", chart_map=user_Chart.chart_page_details(), expenses_map=map_exp, income_map=income_info_data, cycles=all_cycles)
+    return render_template("home.html", chart_map=user.cycle_map(), expenses_map=map_exp, income_map=income_info_data, cycles=user.all_cycles)
 
 @routes.route("/expenses", methods=["GET", "POST"])
 @login_required
@@ -91,7 +50,7 @@ def expenses_page():
         total_expense = totalExpenses(user.expenses)
         map_exp = map_exp_date(user)
         return render_template("expenses.html", expensesList = user.expenses, total_exp=total_expense, expenses_map=map_exp)
-
+# feature needs to be added
 @routes.route("/deleteExpense/<expense_id>",methods=["POST"])
 @login_required
 def delete_expense(expense_id):
